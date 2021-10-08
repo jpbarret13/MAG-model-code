@@ -1,1 +1,5 @@
 redshift_creds.txt
+nohup.out
+test_data_to_try.parquet
+.ipynb_checkpoints
+**/data/
