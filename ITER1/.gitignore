@@ -7,5 +7,6 @@ test_data_to_try.parquet
 **/models/
 **/iteration_1/
 **/iteration_1_500_test/
+**iteration_final/
 *.parquet
 *.model
