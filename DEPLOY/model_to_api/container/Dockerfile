@@ -2,7 +2,7 @@
 # This is a Python 3 image that uses the nginx, gunicorn, flask stack
 # for serving inferences in a stable way.
 
-FROM ubuntu:16.04
+FROM ubuntu:20.04
 
 MAINTAINER jpbarrett13
 
@@ -12,6 +12,8 @@ RUN apt-get -y update && apt-get install -y --no-install-recommends \
          python3 \
          nginx \
          ca-certificates \
+         python3-distutils \
+         python3-apt \
     && rm -rf /var/lib/apt/lists/*
 
 # 2. Here we define all python packages we want to include in our environment.
@@ -30,7 +32,11 @@ ENV PYTHONUNBUFFERED=TRUE
 ENV PYTHONDONTWRITEBYTECODE=TRUE
 ENV PATH="/opt/program:${PATH}"
 
-# 4. Define the folder where our inference code is located
+# 4. Define the folder where our model files are located
+
+# 5. Define the folder where our inference code is located
 COPY mag_model /opt/program
 WORKDIR /opt/program
+
+ENTRYPOINT ["/bin/python3"]
 

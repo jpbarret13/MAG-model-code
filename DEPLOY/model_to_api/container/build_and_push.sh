@@ -26,7 +26,6 @@ fi
 
 
 # Get the region defined in the current configuration (default to us-west-2 if none defined)
-region=$(aws configure get region)
 region=${region:-us-east-1}
 
 
@@ -42,7 +41,7 @@ then
 fi
 
 # Get the login command from ECR and execute it directly
-$(aws ecr get-login --region ${region} --no-include-email)
+aws ecr get-login-password | docker login --username AWS --password-stdin ${fullname}
 
 # Build the docker image locally with the image name and then push it to ECR
 # with the full name.

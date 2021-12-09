@@ -4,6 +4,7 @@
 import os
 import json
 import flask
+import pickle
 import pandas as pd
 import tensorflow as tf
 
@@ -17,29 +18,42 @@ with open(os.path.join(model_path, "topics_vocab.pkl"), "rb") as f:
     
 target_vocab_inv = {j:i for i,j in target_vocab.items()}
 
+print("Loaded target vocabs")
+
 with open(os.path.join(model_path, "doc_type_vocab.pkl"), "rb") as f:
     doc_vocab = pickle.load(f)
     
 doc_vocab_inv = {j:i for i,j in doc_vocab.items()}
+
+print("Loaded doc_type vocabs")
 
 with open(os.path.join(model_path, "journal_name_vocab.pkl"), "rb") as f:
     journal_vocab = pickle.load(f)
     
 journal_vocab_inv = {j:i for i,j in journal_vocab.items()}
 
+print("Loaded journal vocabs")
+
 with open(os.path.join(model_path, "paper_title_vocab.pkl"), "rb") as f:
     title_vocab = pickle.load(f)
     
 title_vocab_inv = {j:i for i,j in title_vocab.items()}
 
+print("Loaded title vocabs")
+
 encoding_layer = tf.keras.layers.experimental.preprocessing.CategoryEncoding(
     max_tokens=len(target_vocab)+1, output_mode="binary", sparse=False)
 
 # Load the model components
-raw_model = tf.keras.models.load_model(os.path.join(model_path, 'mag_model_500_basic'))
+raw_model = tf.keras.models.load_model(os.path.join(model_path, 'mag_model_500_basic'), compile=False)
+raw_model.trainable = False
+
+print("Loaded raw model")
 
 mag_model = tf.keras.Model(inputs=raw_model.inputs, 
                            outputs=tf.math.top_k(raw_model.outputs, k=25))
+
+print("Created full model")
 
 def tokenize_feature(feature, feature_name='doc_type'):
     if feature_name=='doc_type':
@@ -88,8 +102,8 @@ def transformation():
     # Tokenize data
     input_df['title'] = input_df['title'].apply(lambda x: x.lower().strip())
     input_df['paper_title_tok'] = input_df['title'].apply(tokenize_title)
-    input_df['doc_type_tok'] = input_df['doc_type'].apply(tokenize_feature, args=('doc_type'))
-    input_df['journal_tok'] = input_df['journal'].apply(tokenize_feature, args=('journal'))
+    input_df['doc_type_tok'] = input_df['doc_type'].apply(tokenize_feature, args=('doc_type',))
+    input_df['journal_tok'] = input_df['journal'].apply(tokenize_feature, args=('journal',))
     
     paper_titles = tf.keras.preprocessing.sequence.pad_sequences(input_df['paper_title_tok'].to_list(), maxlen=64, 
                                                              dtype='int64', padding='post', 
