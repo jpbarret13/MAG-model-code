@@ -86,7 +86,7 @@ app = flask.Flask(__name__)
 def ping():
     # Check if the classifier was loaded correctly
     try:
-        classifier
+        _ = mag_model.get_layer('cls')
         status = 200
     except:
         status = 400
