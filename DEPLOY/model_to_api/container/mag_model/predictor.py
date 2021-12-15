@@ -79,7 +79,6 @@ def tokenize_title(feature):
         token_feature = [none_token_id]
     return token_feature
 
-
 # The flask app for serving predictions
 app = flask.Flask(__name__)
 @app.route('/ping', methods=['GET'])
@@ -97,7 +96,7 @@ def transformation():
     # Get input JSON data and convert it to a DF
     input_json = flask.request.get_json()
     input_json = json.dumps(input_json)
-    input_df = pd.read_json(input_json, orient='records')
+    input_df = pd.read_json(input_json, orient='records').reset_index()
 
     # Tokenize data
     input_df['title'] = input_df['title'].apply(lambda x: x.lower().strip())
@@ -123,7 +122,7 @@ def transformation():
     for score, pred in zip(scores, preds):
         tags = []
         for i in range(25):
-            if score[i] >= 0.35:
+            if score[i] >= 0.32:
                 tags.append(target_vocab_inv.get(pred[i]))
         all_tags.append({"tags": tags})
 

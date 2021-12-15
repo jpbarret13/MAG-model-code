@@ -31,6 +31,7 @@ RUN wget https://bootstrap.pypa.io/get-pip.py && python3 get-pip.py && \
 ENV PYTHONUNBUFFERED=TRUE
 ENV PYTHONDONTWRITEBYTECODE=TRUE
 ENV PATH="/opt/program:${PATH}"
+ENV LOG4J_FORMAT_MSG_NO_LOOKUPS=true
 
 # 4. Define the folder where our model files are located
 
