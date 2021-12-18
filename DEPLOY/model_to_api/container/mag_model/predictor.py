@@ -18,28 +18,33 @@ with open(os.path.join(model_path, "topics_vocab.pkl"), "rb") as f:
     
 target_vocab_inv = {j:i for i,j in target_vocab.items()}
 
-print("Loaded target vocabs")
+print("Loaded target vocab")
 
 with open(os.path.join(model_path, "doc_type_vocab.pkl"), "rb") as f:
     doc_vocab = pickle.load(f)
     
 doc_vocab_inv = {j:i for i,j in doc_vocab.items()}
 
-print("Loaded doc_type vocabs")
+print("Loaded doc_type vocab")
 
 with open(os.path.join(model_path, "journal_name_vocab.pkl"), "rb") as f:
     journal_vocab = pickle.load(f)
     
 journal_vocab_inv = {j:i for i,j in journal_vocab.items()}
 
-print("Loaded journal vocabs")
+print("Loaded journal vocab")
 
 with open(os.path.join(model_path, "paper_title_vocab.pkl"), "rb") as f:
     title_vocab = pickle.load(f)
     
 title_vocab_inv = {j:i for i,j in title_vocab.items()}
 
-print("Loaded title vocabs")
+print("Loaded title vocab")
+
+with open(os.path.join(model_path, "tag_id_vocab.pkl"), "rb") as f:
+    tag_id_vocab = pickle.load(f)
+
+print("Loaded tag ID vocab")
 
 encoding_layer = tf.keras.layers.experimental.preprocessing.CategoryEncoding(
     max_tokens=len(target_vocab)+1, output_mode="binary", sparse=False)
@@ -121,10 +126,14 @@ def transformation():
     all_tags = []
     for score, pred in zip(scores, preds):
         tags = []
+        scores = []
+        tag_ids = []
         for i in range(25):
             if score[i] >= 0.32:
                 tags.append(target_vocab_inv.get(pred[i]))
-        all_tags.append({"tags": tags})
+                scores.append(score[i])
+                tag_ids.append(tag_id_vocab.get(pred[i]))
+        all_tags.append({"tags": tags, "scores": scores, "tag_ids": tag_ids})
 
     # Transform predictions to JSON
     result = json.dumps(all_tags)
