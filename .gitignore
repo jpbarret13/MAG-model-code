@@ -3,3 +3,4 @@ DEPLOY/docker_build_saved*
 *.parquet
 *.pkl
 *.ipynb_checkpoints*
+*.csv
