@@ -1,6 +1,8 @@
-nohup.out
+*nohup.out
 DEPLOY/docker_build_saved*
 *.parquet
 *.pkl
 *.ipynb_checkpoints*
 *.csv
+*V2/data/iteration_1/t*
+*V2/data/iteration_1/models/*
