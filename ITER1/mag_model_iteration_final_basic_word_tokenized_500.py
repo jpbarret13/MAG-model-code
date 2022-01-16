@@ -247,7 +247,7 @@ def get_dataset(path, data_type='train'):
     tfrecords.sort()
     
     
-    raw_dataset = tf.data.TFRecordDataset(tfrecords, num_parallel_reads=AUTO)
+    raw_dataset = tf.data.TFRecordDataset(tfrecords[:5], num_parallel_reads=AUTO)
 
     parsed_dataset = raw_dataset.map(_parse_function, num_parallel_calls=AUTO)
 
@@ -255,8 +255,8 @@ def get_dataset(path, data_type='train'):
     return parsed_dataset
 
 def scheduler(epoch, curr_lr):
-    rampup_epochs = 5
-    exp_decay = 0.25
+    rampup_epochs = 4
+    exp_decay = 0.17
     def lr(epoch, beg_lr, rampup_epochs, exp_decay):
         if epoch < rampup_epochs:
             return beg_lr
@@ -284,7 +284,7 @@ mirrored_strategy = tf.distribute.experimental.MultiWorkerMirroredStrategy()
 with mirrored_strategy.scope():
     AUTO = tf.data.experimental.AUTOTUNE
 
-    model_iteration = 'iteration_final/basic_word_tokenized'
+    model_iteration = 'iteration_final/basic_word_tokenized_500_test'
     global start_lr
     start_lr = float(args.learning_rate)
 
@@ -374,7 +374,7 @@ with mirrored_strategy.scope():
     concat_output = tf.concat(values=[dense_output_flat, dense_output_flat2, journal_flat, doc_flat], axis=1)
 
     # Third Layer
-    dense_output = tf.keras.layers.Dense(512, activation='relu', 
+    dense_output = tf.keras.layers.Dense(1024, activation='relu', 
                                          kernel_regularizer='L2', name="dense_3")(concat_output)
     dense_output = tf.keras.layers.Dropout(0.20, name="dropout_3")(dense_output)
     dense_output = tf.keras.layers.LayerNormalization(epsilon=1e-6, name="layer_norm_3")(dense_output)
@@ -404,7 +404,7 @@ mag_model.compile(optimizer=optimizer)
 curr_date = datetime.now().strftime("%Y%m%d")
 
 filepath_1 = f"/home/ec2-user/Notebooks/models/{model_iteration}/partial_model{curr_date}_lr{args.learning_rate[2:]}_beta{args.beta.replace('.','')}" \
-             f"_gamma{args.gamma.replace('.','')}_nH{str(args.num_heads)}_nL{str(args.num_layers)}_3dense512/"
+             f"_gamma{args.gamma.replace('.','')}_nH{str(args.num_heads)}_nL{str(args.num_layers)}_3dense1024/"
 
 filepath = filepath_1 + "model_epoch{epoch:02d}ckpt"
 

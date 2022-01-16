@@ -3,7 +3,6 @@ import pandas as pd
 import numpy as np
 import pickle
 import os
-import math
 import json
 import argparse
 import tensorflow_addons as tfa
@@ -247,28 +246,18 @@ def get_dataset(path, data_type='train'):
     tfrecords.sort()
     
     
-    raw_dataset = tf.data.TFRecordDataset(tfrecords, num_parallel_reads=AUTO)
+    raw_dataset = tf.data.TFRecordDataset(tfrecords[:3], num_parallel_reads=AUTO)
 
     parsed_dataset = raw_dataset.map(_parse_function, num_parallel_calls=AUTO)
 
     parsed_dataset = parsed_dataset.apply(tf.data.experimental.dense_to_ragged_batch(1024,drop_remainder=True))
     return parsed_dataset
 
-def scheduler(epoch, curr_lr):
-    rampup_epochs = 5
-    exp_decay = 0.25
-    def lr(epoch, beg_lr, rampup_epochs, exp_decay):
-        if epoch < rampup_epochs:
-            return beg_lr
-        else:
-            return beg_lr * math.exp(-exp_decay * epoch)
-    return lr(epoch, start_lr, rampup_epochs, exp_decay)
-
 
 parser = argparse.ArgumentParser(description='parsing arguments to set config')
 
 parser.add_argument('-e', '--epochs', action='store', dest='epochs', default=20)
-parser.add_argument('-lr', '--learningRate', action='store', dest='learning_rate', default='0.01')
+parser.add_argument('-lr', '--learningRate', action='store', dest='learning_rate', default='0.0001')
 parser.add_argument('-g', '--gamma', action='store', dest='gamma', default='2.0')
 parser.add_argument('-b', '--beta', action='store', dest='beta', default='0.90')
 parser.add_argument('-lm', '--loadModel', action='store', dest='load_model', default='no')
@@ -284,9 +273,8 @@ mirrored_strategy = tf.distribute.experimental.MultiWorkerMirroredStrategy()
 with mirrored_strategy.scope():
     AUTO = tf.data.experimental.AUTOTUNE
 
-    model_iteration = 'iteration_final/basic_word_tokenized'
-    global start_lr
-    start_lr = float(args.learning_rate)
+    model_iteration = 'iteration_final/basic_word_tokenized_500_test'
+
 
     with open(f"./{model_iteration}/vocab/topics_vocab.pkl", "rb") as f:
         target_vocab = pickle.load(f)
@@ -348,7 +336,7 @@ with mirrored_strategy.scope():
                                          name="doc_type_embedding")(doc_type_id)
 
     journal_embs = tf.keras.layers.Embedding(input_dim=len(journal_vocab)+1, 
-                                             output_dim=64, 
+                                             output_dim=128, 
                                              mask_zero=False, 
                                              name="journal_embedding")(journal_id)
 
@@ -374,7 +362,7 @@ with mirrored_strategy.scope():
     concat_output = tf.concat(values=[dense_output_flat, dense_output_flat2, journal_flat, doc_flat], axis=1)
 
     # Third Layer
-    dense_output = tf.keras.layers.Dense(512, activation='relu', 
+    dense_output = tf.keras.layers.Dense(1024, activation='relu', 
                                          kernel_regularizer='L2', name="dense_3")(concat_output)
     dense_output = tf.keras.layers.Dropout(0.20, name="dropout_3")(dense_output)
     dense_output = tf.keras.layers.LayerNormalization(epsilon=1e-6, name="layer_norm_3")(dense_output)
@@ -397,14 +385,14 @@ with mirrored_strategy.scope():
         saved_model.save_weights(f'./models/{model_iteration}/{args.saved_model}_weights')
         mag_model.load_weights(f'./models/{model_iteration}/{model_iteration}_weights')
         
-    optimizer = tf.keras.optimizers.Adam()
+    optimizer = tf.keras.optimizers.Adam(learning_rate=float(args.learning_rate))
 
 mag_model.compile(optimizer=optimizer)
 
 curr_date = datetime.now().strftime("%Y%m%d")
 
 filepath_1 = f"/home/ec2-user/Notebooks/models/{model_iteration}/partial_model{curr_date}_lr{args.learning_rate[2:]}_beta{args.beta.replace('.','')}" \
-             f"_gamma{args.gamma.replace('.','')}_nH{str(args.num_heads)}_nL{str(args.num_layers)}_3dense512/"
+             f"_gamma{args.gamma.replace('.','')}_nH{str(args.num_heads)}_nL{str(args.num_layers)}/"
 
 filepath = filepath_1 + "model_epoch{epoch:02d}ckpt"
 
@@ -415,9 +403,7 @@ model_checkpoint = tf.keras.callbacks.ModelCheckpoint(filepath, monitor='val_los
 
 early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0.001, patience=8)
 
-lr_schedule = tf.keras.callbacks.LearningRateScheduler(scheduler, verbose=1)
-
-callbacks = [model_checkpoint, early_stopping, lr_schedule]
+callbacks = [model_checkpoint, early_stopping]
 
 train_ds = get_dataset(file_path, 'train')
 val_ds = get_dataset(file_path, 'val')
