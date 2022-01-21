@@ -4,6 +4,9 @@ DEPLOY/docker_build_saved*
 *.pkl
 *.ipynb_checkpoints*
 *.csv
+*.tgz
+*.ipynb_checkpoints*
+*variables.data-00000-of-00001
 *V2/data/iteration_1/t*
 *V2/data/iteration_1/models/*
 *V2/data/iteration_2/t*
