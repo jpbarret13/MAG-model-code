@@ -122,9 +122,6 @@ def tokenize_feature(feature, feature_name='doc_type'):
     return token_feature
 
 def tokenize_title(feature):
-    """
-    
-    """
     split_feature = feature.split(" ")
     vocab = title_vocab
     unk_token_id = vocab.get('[UNK]')
