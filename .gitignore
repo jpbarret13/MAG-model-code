@@ -6,3 +6,5 @@ DEPLOY/docker_build_saved*
 *.csv
 *V2/data/iteration_1/t*
 *V2/data/iteration_1/models/*
+*V2/data/iteration_2/t*
+*V2/data/iteration_2/models/*
