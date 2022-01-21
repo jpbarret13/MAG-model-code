@@ -1,6 +1,7 @@
 # File that implements flask server
 
 import os
+import re
 import json
 import flask
 import pickle
