@@ -11,7 +11,7 @@ from chalice import NotFoundError, BadRequestError
 
 import sys, os, base64, datetime, hashlib, hmac
 
-app = Chalice(app_name='mag-model-api')
+app = Chalice(app_name='mag-model-V2-api')
 app.debug = True
 
 import boto3
@@ -25,7 +25,7 @@ def handle_data():
     input_json = app.current_request.json_body
     # Send everything to the Sagemaker endpoint
     res = sagemaker.invoke_endpoint(
-        EndpointName='mag-imitator-endpoint',
+        EndpointName='mag-imitator-v2-endpoint',
         Body=input_json,
         ContentType='application/json',
         Accept='Accept'
