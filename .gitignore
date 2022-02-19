@@ -5,6 +5,7 @@ DEPLOY/docker_build_saved*
 *.ipynb_checkpoints*
 *.csv
 *.tgz
+*.xlsx
 *.ipynb_checkpoints*
 *variables.data-00000-of-00001
 *V2/data/iteration_1/t*
@@ -12,3 +13,4 @@ DEPLOY/docker_build_saved*
 *V2/data/iteration_2/t*
 *V2/data/iteration_2/models/*
 *__pycache__*
+*api_key*
